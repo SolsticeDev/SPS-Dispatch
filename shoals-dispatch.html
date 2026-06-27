@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shoals Property Services — Job Dispatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #1A6EFF;
+    --blue-bright: #3D8BFF;
+    --blue-deep: #0A4ACC;
+    --blue-glow: rgba(26, 110, 255, 0.35);
+    --blue-dim: rgba(26, 110, 255, 0.12);
+    --black: #000000;
+    --surface: #0D0D0D;
+    --surface-2: #141414;
+    --surface-3: #1C1C1C;
+    --border: rgba(26, 110, 255, 0.25);
+    --border-bright: rgba(26, 110, 255, 0.6);
+    --white: #FFFFFF;
+    --white-dim: rgba(255,255,255,0.7);
+    --white-faint: rgba(255,255,255,0.12);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  /* ── TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    opacity: 0.6;
+  }
+
+  /* ── LAYOUT ── */
+  .app-shell {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+  }
+
+  /* ══════════════════════════════
+     HEADER
+  ══════════════════════════════ */
+  .site-header {
+    background: linear-gradient(180deg, #000 0%, #060d1a 100%);
+    border-bottom: 2px solid var(--blue);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .site-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--blue-bright), var(--blue), transparent);
+    filter: blur(1px);
+  }
+
+  /* Grunge blue accent drips */
+  .site-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--blue-deep) 0px, var(--blue-deep) 30px,
+      transparent 30px, transparent 45px,
+      var(--blue) 45px, var(--blue) 55px,
+      transparent 55px, transparent 80px
+    );
+    opacity: 0.5;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+
+  .brand-text { line-height: 1; }
+
+  .brand-logo {
+    font-family: 'Satisfy', cursive;
+    font-size: 42px;
+    color: var(--white);
+    letter-spacing: -1px;
+    text-shadow:
+      0 0 20px var(--blue-glow),
+      2px 2px 0 rgba(26,110,255,0.3);
+    line-height: 0.95;
+  }
+
+  .brand-sub {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--blue-bright);
+    margin-top: 3px;
+  }
+
+  .header-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--blue-bright);
+  }
+
+  .header-location .star {
+    color: var(--blue);
+    font-size: 20px;
+    filter: drop-shadow(0 0 6px var(--blue));
+  }
+
+  /* ══════════════════════════════
+     MAIN BODY
+  ══════════════════════════════ */
+  .main-body {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 0;
+    align-items: start;
+  }
+
+  /* ── FORM AREA ── */
+  .form-area {
+    padding: 24px 28px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-right: 1px solid var(--border);
+  }
+
+  .dispatch-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--blue-bright);
+    opacity: 0.8;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dispatch-title::before {
+    content: '▶';
+    font-size: 8px;
+    color: var(--blue);
+  }
+
+  /* ── FORM SECTION ── */
+  .form-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .form-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--blue), var(--blue-deep));
+  }
+
+  .section-header {
+    background: linear-gradient(90deg, rgba(26,110,255,0.15) 0%, transparent 100%);
+    padding: 10px 16px 10px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--blue-bright);
+  }
+
+  .section-badge {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--blue);
+    background: var(--blue-dim);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 2px 6px;
+    text-transform: uppercase;
+  }
+
+  .section-body {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue-bright);
+    opacity: 0.85;
+  }
+
+  .field-input {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .field-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-glow), inset 0 0 8px rgba(26,110,255,0.05);
+  }
+
+  select.field-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231A6EFF' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  select.field-input option { background: #0D0D0D; }
+
+  /* ── MOVER SELECTOR ── */
+  .mover-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .mover-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--white-dim);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    padding: 12px 6px 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mover-btn span.mover-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  .mover-btn:hover {
+    border-color: var(--blue-bright);
+    color: var(--white);
+  }
+
+  .mover-btn.active {
+    background: linear-gradient(135deg, rgba(26,110,255,0.2), rgba(26,110,255,0.08));
+    border-color: var(--blue);
+    color: var(--blue-bright);
+    box-shadow: 0 0 14px var(--blue-glow), inset 0 0 20px rgba(26,110,255,0.08);
+  }
+
+  .mover-btn.active .mover-label { opacity: 1; color: var(--blue-bright); }
+
+  .mover-icon {
+    font-size: 18px;
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 44px;
+    line-height: 1;
+  }
+
+  /* ── TRUCK SELECTOR ── */
+  .truck-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    align-items: end;
+  }
+
+  .truck-option-label {
+    font-size: 10px;
+    color: var(--blue-bright);
+    opacity: 0.6;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* ── HEXAGON SERVICES ── */
+  .hex-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 6px 0;
+  }
+
+  .hex-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .hex {
+    width: 90px;
+    height: 103px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: var(--surface-3);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.22s;
+    position: relative;
+  }
+
+  /* Hex border via outline hex behind */
+  .hex-outer {
+    width: 96px;
+    height: 110px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.22s;
+    position: relative;
+  }
+
+  .hex-wrap.selected .hex-outer {
+    background: var(--blue);
+    filter: drop-shadow(0 0 12px var(--blue-glow));
+  }
+
+  .hex-wrap.selected .hex {
+    background: linear-gradient(160deg, rgba(26,110,255,0.22), rgba(26,110,255,0.08));
+  }
+
+  .hex-icon { font-size: 26px; line-height: 1; }
+
+  .hex-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--white-dim);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 72px;
+  }
+
+  .hex-wrap.selected .hex-text { color: var(--white); }
+
+  .hex-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-bright);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: transparent;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+
+  .hex-wrap.selected .hex-check {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+  }
+
+  /* ── NOTES ── */
+  textarea.field-input {
+    resize: vertical;
+    min-height: 72px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ── ACTION BUTTONS ── */
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .btn-pdf {
+    flex: 2;
+    background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 50%, var(--blue-bright) 100%);
+    border: none;
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    padding: 16px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+    box-shadow: 0 4px 24px rgba(26,110,255,0.5), 0 0 0 1px rgba(26,110,255,0.4);
+    text-transform: uppercase;
+  }
+
+  .btn-pdf::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 8px,
+      rgba(255,255,255,0.04) 8px,
+      rgba(255,255,255,0.04) 16px
+    );
+  }
+
+  .btn-pdf:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 32px rgba(26,110,255,0.7), 0 0 0 1px rgba(61,139,255,0.6);
+    filter: brightness(1.08);
+  }
+
+  .btn-pdf:active { transform: translateY(0); }
+
+  .btn-pdf-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+  }
+
+  .btn-submit {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    color: var(--blue-bright);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-submit:hover {
+    background: rgba(26,110,255,0.1);
+    border-color: var(--blue);
+    box-shadow: 0 0 16px var(--blue-glow);
+  }
+
+  /* ══════════════════════════════
+     SIDEBAR
+  ══════════════════════════════ */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-bridge {
+    position: relative;
+    flex: 1;
+    min-height: 300px;
+    overflow: hidden;
+  }
+
+  /* SVG-generated bridge placeholder */
+  .bridge-visual {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    background:
+      linear-gradient(180deg,
+        #000 0%,
+        #060e1f 30%,
+        #091529 60%,
+        #030d1a 100%
+      );
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+
+  .bridge-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 310 400' preserveAspectRatio='xMidYMax meet'%3E%3C!-- Sky glow --%3E%3Cellipse cx='155' cy='120' rx='90' ry='60' fill='%230A2555' opacity='0.5'/%3E%3C!-- Water reflection --%3E%3Crect x='0' y='300' width='310' height='100' fill='%23030c1a'/%3E%3C!-- Bridge towers --%3E%3Crect x='95' y='80' width='12' height='230' fill='%231a1a2e' rx='2'/%3E%3Crect x='203' y='80' width='12' height='230' fill='%231a1a2e' rx='2'/%3E%3C!-- Tower caps --%3E%3Crect x='90' y='72' width='22' height='14' fill='%23222240' rx='1'/%3E%3Crect x='198' y='72' width='22' height='14' fill='%23222240' rx='1'/%3E%3C!-- Main cables --%3E%3Cpath d='M30,120 Q155,240 280,120' stroke='%231A6EFF' stroke-width='1.5' fill='none' opacity='0.8'/%3E%3Cpath d='M30,122 Q155,242 280,122' stroke='%230A4ACC' stroke-width='1' fill='none' opacity='0.4'/%3E%3C!-- Vertical suspenders --%3E%3Cline x1='80' y1='143' x2='80' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='100' y1='131' x2='100' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='120' y1='125' x2='120' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='140' y1='121' x2='140' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='155' y1='120' x2='155' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='170' y1='121' x2='170' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='190' y1='125' x2='190' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='210' y1='131' x2='210' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3Cline x1='230' y1='143' x2='230' y2='270' stroke='%230D3A99' stroke-width='0.8' opacity='0.6'/%3E%3C!-- Bridge deck --%3E%3Crect x='20' y='268' width='270' height='8' fill='%23151528' rx='1'/%3E%3Crect x='20' y='272' width='270' height='2' fill='%231A6EFF' opacity='0.3'/%3E%3C!-- Water ripples --%3E%3Cellipse cx='155' cy='320' rx='100' ry='6' fill='none' stroke='%231A6EFF' stroke-width='0.5' opacity='0.25'/%3E%3Cellipse cx='155' cy='335' rx='80' ry='4' fill='none' stroke='%231A6EFF' stroke-width='0.5' opacity='0.18'/%3E%3Cellipse cx='155' cy='348' rx='60' ry='3' fill='none' stroke='%231A6EFF' stroke-width='0.4' opacity='0.12'/%3E%3C!-- Blue reflection in water --%3E%3Crect x='100' y='305' width='4' height='60' fill='%231A6EFF' opacity='0.08'/%3E%3Crect x='205' y='305' width='4' height='60' fill='%231A6EFF' opacity='0.08'/%3E%3Cpath d='M30,316 Q155,290 280,316' stroke='%231A6EFF' stroke-width='1' fill='none' opacity='0.12'/%3E%3C!-- Lights on bridge --%3E%3Ccircle cx='80' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='107' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='134' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='155' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='176' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='203' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3Ccircle cx='230' cy='270' r='1.5' fill='%231A6EFF' opacity='0.7'/%3E%3C!-- City lights bg --%3E%3Crect x='15' y='240' width='6' height='30' fill='%23111122' rx='1'/%3E%3Crect x='25' y='230' width='8' height='40' fill='%23111122' rx='1'/%3E%3Crect x='270' y='238' width='6' height='32' fill='%23111122' rx='1'/%3E%3Crect x='279' y='225' width='10' height='45' fill='%23111122' rx='1'/%3E%3Ccircle cx='28' cy='230' r='1' fill='%231A6EFF' opacity='0.5'/%3E%3Ccircle cx='276' cy='236' r='1' fill='%231A6EFF' opacity='0.5'/%3E%3C/svg%3E") no-repeat center bottom / cover;
+  }
+
+  .bridge-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.7) 100%);
+  }
+
+  .bridge-caption {
+    position: absolute;
+    bottom: 12px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(26,110,255,0.6);
+  }
+
+  .sidebar-dispatcher {
+    background: var(--surface);
+    border-top: 2px solid var(--blue);
+    border-left: 1px solid var(--border);
+    padding: 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .dispatcher-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dispatcher-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-deep), var(--blue));
+    border: 2px solid var(--blue-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: white;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px var(--blue-glow);
+  }
+
+  .dispatcher-info { flex: 1; }
+
+  .dispatcher-role {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--blue-bright);
+    opacity: 0.7;
+  }
+
+  .dispatcher-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 17px;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-top: 1px;
+  }
+
+  .dispatcher-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: #22dd77;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22dd77;
+    box-shadow: 0 0 6px #22dd77;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .sidebar-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--blue-bright);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--white-dim);
+    text-transform: uppercase;
+    margin-top: 3px;
+    opacity: 0.6;
+  }
+
+  .sidebar-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+
+  .contact-icon {
+    width: 22px;
+    height: 22px;
+    background: var(--blue-dim);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--blue-dim), transparent);
+    border: none;
+    margin: 2px 0;
+  }
+
+  /* ══════════════════════════════
+     FOOTER TRUST BAR
+  ══════════════════════════════ */
+  .trust-bar {
+    background: linear-gradient(90deg, var(--blue-deep) 0%, #0A2A80 50%, var(--blue-deep) 100%);
+    border-top: 2px solid var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trust-bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue-bright), transparent);
+    filter: blur(1px);
+    opacity: 0.8;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    flex: 1;
+    justify-content: center;
+  }
+
+  .trust-item:last-child { border-right: none; }
+
+  .trust-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
+  }
+
+  .trust-text { line-height: 1.2; }
+
+  .trust-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    color: var(--white);
+  }
+
+  .trust-desc {
+    font-size: 9px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  /* ══════════════════════════════
+     TOAST NOTIFICATION
+  ══════════════════════════════ */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--blue);
+    border-left: 4px solid var(--blue);
+    border-radius: 4px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 20px var(--blue-glow);
+    transform: translateX(130%);
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    z-index: 1000;
+    max-width: 320px;
+  }
+
+  .toast.show { transform: translateX(0); }
+
+  .toast-icon { font-size: 24px; flex-shrink: 0; }
+
+  .toast-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+
+  .toast-msg {
+    font-size: 11px;
+    color: var(--white-dim);
+    margin-top: 2px;
+  }
+
+  /* ── U-Haul truck visual badge ── */
+  .truck-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 152, 0, 0.08);
+    border: 1px solid rgba(255, 152, 0, 0.2);
+    border-radius: 2px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #FF9800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ── Live Rate Preview ── */
+  .rate-preview {
+    background: linear-gradient(135deg, rgba(26,110,255,0.12), rgba(26,110,255,0.05));
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rate-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    opacity: 0.7;
+  }
+
+  .rate-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--blue-bright);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .rate-unit {
+    font-size: 11px;
+    color: var(--white-dim);
+    font-weight: 500;
+  }
+
+  /* ── Estimated total ── */
+  .rate-right { text-align: right; }
+
+  /* ══════════════════════════════
+     ADDRESS AUTOCOMPLETE
+  ══════════════════════════════ */
+  .addr-wrap {
+    position: relative;
+  }
+
+  .addr-spinner {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+    pointer-events: none;
+  }
+
+  .addr-wrap.loading .addr-spinner { display: block; }
+
+  @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+  .addr-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #111827;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    list-style: none;
+    margin: 0; padding: 4px 0;
+    max-height: 230px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.9), 0 0 0 1px rgba(26,110,255,0.15);
+    display: none;
+  }
+
+  .addr-dropdown.open { display: block; }
+
+  .addr-dropdown li {
+    padding: 9px 14px;
+    font-size: 12.5px;
+    color: var(--white-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border-bottom: 1px solid rgba(26,110,255,0.07);
+    line-height: 1.35;
+    transition: background 0.12s;
+  }
+
+  .addr-dropdown li:last-child { border-bottom: none; }
+
+  .addr-dropdown li:hover,
+  .addr-dropdown li.active {
+    background: rgba(26,110,255,0.15);
+    color: var(--white);
+  }
+
+  .addr-dropdown li .addr-pin {
+    color: var(--blue-bright);
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .addr-dropdown li .addr-main {
+    font-weight: 600;
+    color: var(--white);
+    display: block;
+  }
+
+  .addr-dropdown li .addr-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    display: block;
+    margin-top: 1px;
+  }
+
+  .addr-dropdown li.no-results {
+    color: rgba(255,255,255,0.3);
+    font-style: italic;
+    cursor: default;
+    font-size: 12px;
+  }
+
+  .addr-dropdown li.no-results:hover { background: none; }
+
+  .osm-credit {
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    margin-top: -6px;
+    letter-spacing: 0.3px;
+  }
+
+  .osm-credit a { color: rgba(26,110,255,0.6); text-decoration: none; }
+  .osm-credit a:hover { color: var(--blue-bright); text-decoration: underline; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+
+  /* Animate sections on load */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-section:nth-child(1) { animation: fadeUp 0.5s ease 0.05s both; }
+  .form-section:nth-child(2) { animation: fadeUp 0.5s ease 0.15s both; }
+  .form-section:nth-child(3) { animation: fadeUp 0.5s ease 0.25s both; }
+  .form-section:nth-child(4) { animation: fadeUp 0.5s ease 0.35s both; }
+
+  @media (max-width: 900px) {
+    .main-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ══ HEADER ══ -->
+  <header class="site-header">
+    <div class="header-brand">
+      <!-- SVG House Icon -->
+      <svg class="brand-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+        </defs>
+        <polygon points="26,4 2,24 10,24 10,48 22,48 22,34 30,34 30,48 42,48 42,24 50,24" fill="#0A1F66" stroke="#1A6EFF" stroke-width="1.5" filter="url(#glow)"/>
+        <polygon points="26,4 2,24 10,24 10,48 22,48 22,34 30,34 30,48 42,48 42,24 50,24" fill="none" stroke="#3D8BFF" stroke-width="0.5" opacity="0.6"/>
+        <rect x="21" y="34" width="10" height="14" fill="#1A6EFF" opacity="0.8"/>
+        <polygon points="26,1 0,23 52,23" fill="#1A6EFF" opacity="0.25"/>
+        <!-- Stars accent -->
+        <circle cx="38" cy="14" r="1.5" fill="#1A6EFF" opacity="0.9"/>
+        <circle cx="14" cy="18" r="1" fill="#3D8BFF" opacity="0.7"/>
+      </svg>
+
+      <div class="brand-text">
+        <div class="brand-logo">Shoals</div>
+        <div class="brand-sub">Property Services</div>
+      </div>
+    </div>
+
+    <div class="header-location">
+      <span class="star">★</span>
+      THE SHOALS, ALABAMA
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main-body">
+
+    <!-- ── FORM AREA ── -->
+    <section class="form-area">
+
+      <div class="dispatch-title">New Job Dispatch — Job Entry Form</div>
+
+      <!-- Section 1: Client & Job Info -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="#3D8BFF" stroke-width="1.5"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#3D8BFF" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="section-label">Client &amp; Job Info</span>
+          <span class="section-badge">Required</span>
+        </div>
+        <div class="section-body">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Client Name</label>
+              <input type="text" class="field-input" placeholder="Full name..." id="clientName">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Phone Number</label>
+              <input type="tel" class="field-input" placeholder="(256) 000-0000" id="clientPhone">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Job Date</label>
+              <input type="date" class="field-input" id="jobDate">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Start Time</label>
+              <input type="time" class="field-input" id="jobTime">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Origin / Start Address</label>
+            <div class="addr-wrap" id="wrap-startAddr">
+              <input type="text" class="field-input" placeholder="Start typing pickup address..." id="startAddr" autocomplete="off" oninput="addrInput(this,'startAddr')" onkeydown="addrKey(event,'startAddr')">
+              <div class="addr-spinner" id="spin-startAddr"></div>
+              <ul class="addr-dropdown" id="drop-startAddr"></ul>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Destination / End Address</label>
+            <div class="addr-wrap" id="wrap-endAddr">
+              <input type="text" class="field-input" placeholder="Start typing drop-off address..." id="endAddr" autocomplete="off" oninput="addrInput(this,'endAddr')" onkeydown="addrKey(event,'endAddr')">
+              <div class="addr-spinner" id="spin-endAddr"></div>
+              <ul class="addr-dropdown" id="drop-endAddr"></ul>
+            </div>
+          </div>
+          <div class="osm-credit">📍 Address search powered by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap / Nominatim</a> — free, no API key</div>
+        </div>
+      </div>
+
+      <!-- Section 2: Moving Logistics -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="7" width="14" height="7" rx="1.5" stroke="#3D8BFF" stroke-width="1.5"/><path d="M3 7V5a4 4 0 018 0v2" stroke="#3D8BFF" stroke-width="1.5"/><circle cx="13" cy="13.5" r="1.5" fill="#3D8BFF"/><circle cx="3" cy="13.5" r="1.5" fill="#3D8BFF"/></svg>
+          <span class="section-label">Moving Logistics</span>
+          <span class="section-badge">Crucial</span>
+        </div>
+        <div class="section-body">
+
+          <div class="field-group">
+            <label class="field-label">Number of Movers</label>
+            <div class="mover-selector">
+              <button class="mover-btn" onclick="selectMovers(this, 1)">
+                <div class="mover-icon">👤</div>
+                <div style="font-size:26px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:inherit">1</div>
+                <span class="mover-label">Solo</span>
+              </button>
+              <button class="mover-btn active" onclick="selectMovers(this, 2)">
+                <div class="mover-icon">👤👤</div>
+                <div style="font-size:26px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:inherit">2</div>
+                <span class="mover-label">Crew</span>
+              </button>
+              <button class="mover-btn" onclick="selectMovers(this, 3)">
+                <div class="mover-icon">👤👤👤</div>
+                <div style="font-size:26px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:inherit">3</div>
+                <span class="mover-label">Team</span>
+              </button>
+              <button class="mover-btn" onclick="selectMovers(this, 4)">
+                <div class="mover-icon">👤👤👤👤</div>
+                <div style="font-size:26px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:inherit">4</div>
+                <span class="mover-label">Squad</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="truck-row">
+            <div class="field-group">
+              <label class="field-label">Truck Size</label>
+              <select class="field-input" id="truckSize" onchange="updateTruckBadge(this)">
+                <option value="">Select truck...</option>
+                <option value="10ft">🚛 10' U-Haul — Apartment/Studio</option>
+                <option value="15ft">🚛 15' U-Haul — 1–2 Bedroom</option>
+                <option value="20ft">🚛 20' U-Haul — 2–3 Bedroom</option>
+                <option value="26ft">🚛 26' Box Truck — Large Home</option>
+                <option value="client">🔑 Client-Provided Vehicle</option>
+              </select>
+              <div class="truck-badge" id="truckBadge" style="display:none">
+                <span>🟠</span>
+                <span id="truckBadgeText">U-Haul</span>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Truck Fee ($)</label>
+              <input type="number" class="field-input" placeholder="0.00" id="truckFee" oninput="updateRatePreview()">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Hourly Rate ($ / hr)</label>
+              <input type="number" class="field-input" placeholder="e.g. 120" id="hourlyRate" oninput="updateRatePreview()">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Est. Hours (min 2)</label>
+              <input type="number" class="field-input" placeholder="2" min="2" id="estHours" oninput="updateRatePreview()">
+            </div>
+          </div>
+
+          <!-- Live Rate Preview -->
+          <div class="rate-preview" id="ratePreview">
+            <div>
+              <div class="rate-label">Estimated Total</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-weight:500">2-hr minimum applied</div>
+            </div>
+            <div class="rate-right">
+              <div class="rate-value" id="totalDisplay">$—</div>
+              <div class="rate-unit">+ mileage if applicable</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 3: Service Selection -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 10.5L8 2l6 8.5H2z" stroke="#3D8BFF" stroke-width="1.5" stroke-linejoin="round"/><path d="M5 10.5v3.5h6v-3.5" stroke="#3D8BFF" stroke-width="1.5"/></svg>
+          <span class="section-label">Services Requested</span>
+          <span class="section-badge">Select All That Apply</span>
+        </div>
+        <div class="section-body">
+          <div class="hex-grid" id="hexGrid">
+
+            <!-- MOVING -->
+            <div class="hex-wrap selected" onclick="toggleHex(this)" data-service="Moving">
+              <div class="hex-outer">
+                <div class="hex">
+                  <div class="hex-icon">🚚</div>
+                  <div class="hex-text">MOVING</div>
+                </div>
+              </div>
+              <div class="hex-check">✓</div>
+            </div>
+
+            <!-- PROPERTY CLEANOUTS -->
+            <div class="hex-wrap" onclick="toggleHex(this)" data-service="Property Cleanouts">
+              <div class="hex-outer">
+                <div class="hex">
+                  <div class="hex-icon">🏠</div>
+                  <div class="hex-text">PROPERTY CLEANOUTS</div>
+                </div>
+              </div>
+              <div class="hex-check">✓</div>
+            </div>
+
+            <!-- JUNK REMOVAL -->
+            <div class="hex-wrap" onclick="toggleHex(this)" data-service="Junk Removal">
+              <div class="hex-outer">
+                <div class="hex">
+                  <div class="hex-icon">🗑️</div>
+                  <div class="hex-text">JUNK REMOVAL</div>
+                </div>
+              </div>
+              <div class="hex-check">✓</div>
+            </div>
+
+            <!-- PACKING & LOADING -->
+            <div class="hex-wrap" onclick="toggleHex(this)" data-service="Packing & Loading">
+              <div class="hex-outer">
+                <div class="hex">
+                  <div class="hex-icon">📦</div>
+                  <div class="hex-text">PACKING & LOADING</div>
+                </div>
+              </div>
+              <div class="hex-check">✓</div>
+            </div>
+
+            <!-- DEBRIS REMOVAL -->
+            <div class="hex-wrap" onclick="toggleHex(this)" data-service="Debris Removal">
+              <div class="hex-outer">
+                <div class="hex">
+                  <div class="hex-icon">🧹</div>
+                  <div class="hex-text">DEBRIS REMOVAL</div>
+                </div>
+              </div>
+              <div class="hex-check">✓</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Notes -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#3D8BFF" stroke-width="1.5"/><line x1="5" y1="6" x2="11" y2="6" stroke="#3D8BFF" stroke-width="1.2"/><line x1="5" y1="9" x2="9" y2="9" stroke="#3D8BFF" stroke-width="1.2"/></svg>
+          <span class="section-label">Special Notes</span>
+          <span class="section-badge">Optional</span>
+        </div>
+        <div class="section-body">
+          <div class="field-group">
+            <label class="field-label">Job Notes / Instructions</label>
+            <textarea class="field-input" placeholder="Stairs, heavy items, fragile goods, access codes, etc..." id="jobNotes" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-bar">
+        <button class="btn-pdf" onclick="generatePDF()">
+          <span class="btn-pdf-icon">📄</span>
+          Generate Job PDF
+        </button>
+        <button class="btn-submit" onclick="submitJob()">
+          <span>✅</span>
+          Submit Job
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sidebar-bridge">
+        <div class="bridge-visual"></div>
+        <div class="bridge-overlay"></div>
+        <div class="bridge-caption">O'NEAL BRIDGE — FLORENCE, ALABAMA</div>
+      </div>
+
+      <div class="sidebar-dispatcher">
+        <div class="dispatcher-header">
+          <div class="dispatcher-avatar">DH</div>
+          <div class="dispatcher-info">
+            <div class="dispatcher-role">Job Created By</div>
+            <div class="dispatcher-name">Devin Haynes</div>
+            <div class="dispatcher-status">
+              <div class="status-dot"></div>
+              Active — On Dispatch
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-jobs">0</div>
+            <div class="stat-label">Jobs Today</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">2hr</div>
+            <div class="stat-label">Minimum</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-movers">2</div>
+            <div class="stat-label">Crew Size</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-services">1</div>
+            <div class="stat-label">Services</div>
+          </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <div class="sidebar-contact">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(26,110,255,0.6);margin-bottom:4px">Contact</div>
+          <div class="contact-row">
+            <div class="contact-icon">📞</div>
+            <span>(256) 000-0000</span>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">✉️</div>
+            <span>shoalspropertyservices@email.com</span>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">📍</div>
+            <span>The Shoals, Alabama</span>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- ══ FOOTER TRUST BAR ══ -->
+  <footer class="trust-bar">
+    <div class="trust-item">
+      <div class="trust-icon">🛡️</div>
+      <div class="trust-text">
+        <div class="trust-name">Reliable</div>
+        <div class="trust-desc">Licensed &amp; Insured</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">⚡</div>
+      <div class="trust-text">
+        <div class="trust-name">Fast &amp; Efficient</div>
+        <div class="trust-desc">On-time every time</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">💪</div>
+      <div class="trust-text">
+        <div class="trust-name">Hard Working</div>
+        <div class="trust-desc">No job too tough</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">📍</div>
+      <div class="trust-text">
+        <div class="trust-name">Local &amp; Trusted</div>
+        <div class="trust-desc">Serving The Shoals</div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toastIcon">📄</div>
+  <div>
+    <div class="toast-title" id="toastTitle">PDF Ready</div>
+    <div class="toast-msg" id="toastMsg">Job sheet generated successfully.</div>
+  </div>
+</div>
+
+<script>
+  /* ─── STATE ─── */
+  let moversCount = 2;
+  let jobsToday = 0;
+  let selectedServices = new Set(['Moving']);
+
+  /* ─── MOVER SELECTOR ─── */
+  function selectMovers(btn, count) {
+    document.querySelectorAll('.mover-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    moversCount = count;
+    document.getElementById('stat-movers').textContent = count;
+    updateRatePreview();
+  }
+
+  /* ─── TRUCK BADGE ─── */
+  function updateTruckBadge(sel) {
+    const badge = document.getElementById('truckBadge');
+    const badgeText = document.getElementById('truckBadgeText');
+    if (sel.value && sel.value !== 'client') {
+      const labels = { '10ft': '10\' U-Haul', '15ft': '15\' U-Haul', '20ft': '20\' U-Haul', '26ft': '26\' Box Truck' };
+      badge.style.display = 'inline-flex';
+      badgeText.textContent = labels[sel.value] || sel.value;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  /* ─── RATE PREVIEW ─── */
+  function updateRatePreview() {
+    const rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+    const hours = Math.max(2, parseFloat(document.getElementById('estHours').value) || 2);
+    const truckFee = parseFloat(document.getElementById('truckFee').value) || 0;
+    const total = (rate * hours) + truckFee;
+    const display = document.getElementById('totalDisplay');
+    if (rate > 0) {
+      display.textContent = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    } else {
+      display.textContent = '$—';
+    }
+  }
+
+  /* ─── HEX SERVICE TOGGLE ─── */
+  function toggleHex(el) {
+    el.classList.toggle('selected');
+    const service = el.dataset.service;
+    if (el.classList.contains('selected')) {
+      selectedServices.add(service);
+    } else {
+      selectedServices.delete(service);
+    }
+    document.getElementById('stat-services').textContent = selectedServices.size || 0;
+  }
+
+  /* ─── GATHER FORM DATA ─── */
+  function getFormData() {
+    return {
+      clientName: document.getElementById('clientName').value.trim(),
+      clientPhone: document.getElementById('clientPhone').value.trim(),
+      jobDate: document.getElementById('jobDate').value,
+      jobTime: document.getElementById('jobTime').value,
+      startAddr: document.getElementById('startAddr').value.trim(),
+      endAddr: document.getElementById('endAddr').value.trim(),
+      movers: moversCount,
+      hourlyRate: document.getElementById('hourlyRate').value,
+      estHours: document.getElementById('estHours').value || '2',
+      truckSize: document.getElementById('truckSize').value,
+      truckFee: document.getElementById('truckFee').value || '0',
+      services: Array.from(selectedServices),
+      notes: document.getElementById('jobNotes').value.trim(),
+    };
+  }
+
+  /* ─── GENERATE PDF (Blob → hidden anchor, no popup blocker) ─── */
+  function generatePDF() {
+    const d = getFormData();
+    if (!d.clientName) {
+      showToast('⚠️', 'Missing Info', 'Please enter a client name.');
+      return;
+    }
+
+    const rate     = parseFloat(d.hourlyRate) || 0;
+    const hours    = Math.max(2, parseFloat(d.estHours) || 2);
+    const truckFee = parseFloat(d.truckFee) || 0;
+    const labor    = rate * hours;
+    const total    = labor + truckFee;
+    const truckLabels = { '10ft': "10' U-Haul", '15ft': "15' U-Haul", '20ft': "20' U-Haul", '26ft': "26' Box Truck", 'client': 'Client-Provided' };
+    const jobId    = 'SPS-' + Date.now().toString().slice(-6);
+    const nowStr   = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const nowFull  = new Date().toLocaleString();
+
+    const serviceChips = d.services.length
+      ? d.services.map(s => `<div class="service-chip">${s}</div>`).join('')
+      : '<span style="color:#999;font-size:12px;">None selected</span>';
+
+    const truckFeeRow = truckFee > 0
+      ? `<div class="total-row"><span>Truck Fee (${truckLabels[d.truckSize] || 'Truck'})</span><span>$${truckFee.toFixed(2)}</span></div>`
+      : '';
+
+    const notesBlock = d.notes
+      ? `<div style="margin-top:10px;"><div class="field-label">Notes / Instructions</div>
+         <div class="field-value" style="margin-top:4px;white-space:pre-wrap;font-size:13px;color:#444;">${d.notes}</div></div>`
+      : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Job Sheet ${jobId}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:32px;max-width:720px;margin:0 auto;}
+  h1{font-size:32px;color:#0A2A80;letter-spacing:2px;font-weight:900;line-height:1;font-family:Arial,sans-serif;}
+  .co-sub{font-size:12px;letter-spacing:3px;color:#1A6EFF;margin-top:3px;text-transform:uppercase;font-weight:700;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1A6EFF;padding-bottom:16px;margin-bottom:22px;}
+  .job-id{text-align:right;font-size:11px;color:#666;letter-spacing:1px;}
+  .job-id strong{display:block;font-size:22px;color:#1A6EFF;letter-spacing:2px;font-weight:900;}
+  .section{margin-bottom:20px;}
+  .section-title{font-size:13px;letter-spacing:3px;color:#1A6EFF;border-bottom:1px solid #d0dcf5;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;font-weight:800;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;}
+  .field-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:3px;}
+  .field-value{font-size:14px;color:#111;font-weight:500;}
+  .services{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .service-chip{background:#E8F0FF;border:1px solid #1A6EFF;color:#0A2A80;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:2px;}
+  .totals{background:#f5f8ff;border:1px solid #d0dcf5;border-radius:4px;padding:16px;margin-top:8px;}
+  .total-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:#444;}
+  .total-row.grand{font-weight:700;font-size:17px;color:#111;border-top:2px solid #1A6EFF;margin-top:8px;padding-top:10px;}
+  .sig-area{display:flex;gap:40px;margin-top:28px;}
+  .sig-block{flex:1;}
+  .sig-role{font-size:9px;font-weight:700;letter-spacing:2px;color:#888;margin-bottom:18px;text-transform:uppercase;}
+  .sig-line{border-top:1px solid #bbb;padding-top:5px;font-size:10px;color:#999;}
+  .footer{margin-top:28px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:10px;color:#aaa;letter-spacing:0.5px;}
+  @media print{
+    body{padding:20px;}
+    button{display:none;}
+  }
+</style>
+</head><body>
+
+<div class="header">
+  <div>
+    <h1>Shoals Property Services</h1>
+    <div class="co-sub">The Shoals, Alabama</div>
+  </div>
+  <div class="job-id">
+    <div style="margin-bottom:4px;text-transform:uppercase;">Job Sheet</div>
+    <strong>${jobId}</strong>
+    <div style="margin-top:4px;">${nowStr}</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Client Information</div>
+  <div class="grid-2">
+    <div><div class="field-label">Client Name</div><div class="field-value">${d.clientName || '—'}</div></div>
+    <div><div class="field-label">Phone</div><div class="field-value">${d.clientPhone || '—'}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Job Details</div>
+  <div class="grid-2">
+    <div><div class="field-label">Date</div><div class="field-value">${d.jobDate || '—'}</div></div>
+    <div><div class="field-label">Start Time</div><div class="field-value">${d.jobTime || '—'}</div></div>
+    <div><div class="field-label">Origin Address</div><div class="field-value">${d.startAddr || '—'}</div></div>
+    <div><div class="field-label">Destination Address</div><div class="field-value">${d.endAddr || '—'}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Services Requested</div>
+  <div class="services">${serviceChips}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Moving Logistics</div>
+  <div class="grid-2">
+    <div><div class="field-label">Number of Movers</div><div class="field-value">${d.movers}</div></div>
+    <div><div class="field-label">Truck</div><div class="field-value">${truckLabels[d.truckSize] || 'Not specified'}</div></div>
+  </div>
+  ${notesBlock}
+</div>
+
+<div class="section">
+  <div class="section-title">Estimate</div>
+  <div class="totals">
+    <div class="total-row">
+      <span>Labor — ${d.movers} mover${d.movers > 1 ? 's' : ''} × $${d.hourlyRate || 0}/hr × ${hours} hrs</span>
+      <span>$${labor.toFixed(2)}</span>
+    </div>
+    ${truckFeeRow}
+    <div class="total-row" style="color:#aaa;font-size:12px;">
+      <span>Mileage (billed separately if applicable)</span><span>TBD</span>
+    </div>
+    <div class="total-row grand">
+      <span>Estimated Total</span><span>$${total.toFixed(2)}</span>
+    </div>
+  </div>
+</div>
+
+<div class="sig-area">
+  <div class="sig-block">
+    <div class="sig-role">Client Signature</div>
+    <div class="sig-line">Signature &amp; Date</div>
+  </div>
+  <div class="sig-block">
+    <div class="sig-role">Authorized By</div>
+    <div class="sig-line">Devin Haynes — Shoals Property Services</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>SHOALS PROPERTY SERVICES — THE SHOALS, ALABAMA</div>
+  <div>Generated ${nowFull}</div>
+</div>
+
+<script>
+  // Auto-open print dialog after fonts settle
+  window.addEventListener('load', function() {
+    setTimeout(function() { window.print(); }, 600);
+  });
+<\/script>
+</body></html>`;
+
+    // Build as a Blob so we never need window.open (avoids popup blockers)
+    const blob = new Blob([html], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href   = url;
+    a.target = '_blank';
+    a.rel    = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Revoke after a few seconds to free memory
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    jobsToday++;
+    document.getElementById('stat-jobs').textContent = jobsToday;
+    showToast('📄', 'PDF Generated', `Job sheet ${jobId} ready to print.`);
+  }
+
+  /* ─── SUBMIT JOB ─── */
+  function submitJob() {
+    const d = getFormData();
+    if (!d.clientName || !d.jobDate || !d.startAddr) {
+      showToast('⚠️', 'Incomplete Form', 'Fill in client name, date, and origin address.');
+      return;
+    }
+    jobsToday++;
+    document.getElementById('stat-jobs').textContent = jobsToday;
+    showToast('✅', 'Job Submitted', `${d.clientName}'s job is on the board.`);
+  }
+
+  /* ─── TOAST ─── */
+  function showToast(icon, title, msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastIcon').textContent = icon;
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4000);
+  }
+
+  /* ════════════════════════════════════════
+     NOMINATIM ADDRESS AUTOCOMPLETE
+     Free, no API key — OpenStreetMap
+  ════════════════════════════════════════ */
+  const addrTimers = {};
+  const addrCache = {};
+  let addrCursor = { startAddr: -1, endAddr: -1 };
+
+  function addrInput(input, id) {
+    const q = input.value.trim();
+    clearTimeout(addrTimers[id]);
+    closeDropdown(id);
+
+    if (q.length < 3) return;
+
+    // debounce 450 ms — fires original + normalized query against Nominatim + Photon
+    addrTimers[id] = setTimeout(() => fetchAddr(q, id), 450);
+  }
+
+  /* ── Normalize spelled-out words that OSM doesn't index well ── */
+  function normalizeAddr(q) {
+    const map = {
+      // Ordinals
+      'first':'1st','second':'2nd','third':'3rd','fourth':'4th','fifth':'5th',
+      'sixth':'6th','seventh':'7th','eighth':'8th','ninth':'9th','tenth':'10th',
+      'eleventh':'11th','twelfth':'12th','thirteenth':'13th','fourteenth':'14th',
+      'fifteenth':'15th','sixteenth':'16th','seventeenth':'17th','eighteenth':'18th',
+      'nineteenth':'19th','twentieth':'20th',
+      // Directions
+      'north':'N','south':'S','east':'E','west':'W',
+      'northeast':'NE','northwest':'NW','southeast':'SE','southwest':'SW',
+      // Street types
+      'street':'St','avenue':'Ave','boulevard':'Blvd','drive':'Dr',
+      'road':'Rd','lane':'Ln','court':'Ct','circle':'Cir','place':'Pl',
+      'highway':'Hwy','parkway':'Pkwy','terrace':'Ter','trail':'Trl'
+    };
+    return q.replace(/\b(\w+)\b/g, (m) => map[m.toLowerCase()] || m);
+  }
+
+  /* Convert Photon GeoJSON features into Nominatim-style result objects */
+  function photonToNominatim(features) {
+    return (features || []).filter(f => f.properties && f.geometry).map(f => {
+      const p = f.properties;
+      return {
+        display_name: [p.housenumber, p.street, p.city||p.town||p.village, p.state, p.postcode].filter(Boolean).join(', '),
+        address: {
+          house_number: p.housenumber || '',
+          road:         p.street || p.name || '',
+          city:         p.city || p.town || p.village || '',
+          state:        p.state || '',
+          postcode:     p.postcode || '',
+          county:       p.county || ''
+        }
+      };
+    });
+  }
+
+  /* Dedupe by street+city key; bubble results that have a house number to top */
+  function dedupeResults(results) {
+    const seen = new Set();
+    const withNum = [], withoutNum = [];
+    for (const r of results) {
+      const a = r.address || {};
+      const key = [a.house_number, a.road, a.city||a.town, a.state].filter(Boolean).join('|').toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      (a.house_number ? withNum : withoutNum).push(r);
+    }
+    return [...withNum, ...withoutNum].slice(0, 7);
+  }
+
+  async function fetchAddr(q, id) {
+    const cacheKey = q.trim().toLowerCase();
+    if (addrCache[cacheKey]) { renderDropdown(addrCache[cacheKey], id); return; }
+
+    const wrap = document.getElementById('wrap-' + id);
+    wrap.classList.add('loading');
+
+    try {
+      const norm = normalizeAddr(q);  // e.g. "905 E 1st St Tuscumbia Alabama"
+
+      /* Nominatim query builder */
+      const nominatim = (query) => {
+        const p = new URLSearchParams({
+          q: query, format:'json', addressdetails:'1',
+          limit:'7', countrycodes:'us', dedupe:'1', 'accept-language':'en'
+        });
+        return fetch('https://nominatim.openstreetmap.org/search?' + p, {
+          headers: { 'User-Agent': 'ShoalsPropertyServices/1.0 (dispatch)' }
+        }).then(r => r.ok ? r.json() : []).catch(() => []);
+      };
+
+      /* Photon (Komoot) — free, no key, handles natural language addresses well */
+      const photon = (query) => {
+        const p = new URLSearchParams({ q: query, limit:'7', lang:'en' });
+        return fetch('https://photon.komoot.io/api/?' + p)
+          .then(r => r.ok ? r.json() : { features:[] })
+          .then(d => photonToNominatim(d.features))
+          .catch(() => []);
+      };
+
+      // Fire original + normalized against both services simultaneously
+      const promises = [nominatim(q), photon(q)];
+      if (norm !== q) promises.push(nominatim(norm), photon(norm));
+
+      const arrays = await Promise.all(promises);
+      const merged = dedupeResults(arrays.flat());
+
+      addrCache[cacheKey] = merged;
+      renderDropdown(merged, id);
+
+    } catch (e) {
+      console.warn('Address lookup failed:', e);
+      renderError(id);
+    } finally {
+      wrap.classList.remove('loading');
+    }
+  }
+
+  function renderDropdown(results, id) {
+    const drop = document.getElementById('drop-' + id);
+    addrCursor[id] = -1;
+    drop.innerHTML = '';
+
+    if (!results || results.length === 0) {
+      drop.innerHTML = '<li class="no-results">No addresses found — try abbreviating (e.g. "905 E 1st St, Tuscumbia AL")</li>';
+      drop.classList.add('open');
+      return;
+    }
+
+    results.forEach((r) => {
+      const li  = document.createElement('li');
+      const a   = r.address || {};
+
+      // Build a clean single-line address from structured fields
+      const street = [a.house_number, a.road || a.pedestrian || a.footway || a.path]
+        .filter(Boolean).join(' ');
+      const city   = a.city || a.town || a.village || a.hamlet || a.county || '';
+      const state  = a.state || '';
+      const zip    = a.postcode || '';
+
+      // mainText: street number + road (fallback to first segment of display_name)
+      const mainText = street || r.display_name.split(',')[0].trim();
+      // subText: city, state zip
+      const subText  = [city, state, zip].filter(Boolean).join(', ');
+
+      // Full formatted address to populate the input
+      const fullAddr = [street, city, state, zip].filter(Boolean).join(', ');
+
+      li.innerHTML = `
+        <span class="addr-pin">📍</span>
+        <span>
+          <span class="addr-main">${escHtml(mainText)}</span>
+          ${subText ? `<span class="addr-sub">${escHtml(subText)}</span>` : ''}
+        </span>`;
+
+      // Store the clean formatted address (not the raw display_name with country junk)
+      li.dataset.full = fullAddr || r.display_name;
+
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selectAddr(id, li.dataset.full);
+      });
+
+      drop.appendChild(li);
+    });
+
+    drop.classList.add('open');
+  }
+
+  function renderError(id) {
+    const drop = document.getElementById('drop-' + id);
+    drop.innerHTML = '<li class="no-results">⚠️ Lookup unavailable — type address manually</li>';
+    drop.classList.add('open');
+  }
+
+  function selectAddr(id, value) {
+    document.getElementById(id).value = value;
+    closeDropdown(id);
+  }
+
+  function closeDropdown(id) {
+    const drop = document.getElementById('drop-' + id);
+    if (drop) { drop.classList.remove('open'); drop.innerHTML = ''; }
+    addrCursor[id] = -1;
+  }
+
+  function addrKey(e, id) {
+    const drop = document.getElementById('drop-' + id);
+    if (!drop.classList.contains('open')) return;
+
+    const items = drop.querySelectorAll('li:not(.no-results)');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      addrCursor[id] = Math.min(addrCursor[id] + 1, items.length - 1);
+      highlightItem(items, addrCursor[id]);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      addrCursor[id] = Math.max(addrCursor[id] - 1, 0);
+      highlightItem(items, addrCursor[id]);
+    } else if (e.key === 'Enter' && addrCursor[id] >= 0) {
+      e.preventDefault();
+      selectAddr(id, items[addrCursor[id]].dataset.full);
+    } else if (e.key === 'Escape') {
+      closeDropdown(id);
+    }
+  }
+
+  function highlightItem(items, idx) {
+    items.forEach((el, i) => el.classList.toggle('active', i === idx));
+    items[idx]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    ['startAddr','endAddr'].forEach(id => {
+      const wrap = document.getElementById('wrap-' + id);
+      if (wrap && !wrap.contains(e.target)) closeDropdown(id);
+    });
+  });
+
+  /* ─── SET TODAY'S DATE ─── */
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('jobDate').value = today;
+  });
+</script>
+</body>
+</html>
